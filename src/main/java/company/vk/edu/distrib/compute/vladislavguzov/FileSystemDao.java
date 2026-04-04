@@ -74,7 +74,8 @@ public class FileSystemDao implements Dao<byte[]> {
 
     private Path resolveFilePath(String key) {
         String safeFileName = key.replaceAll("[/\\\\:*?\"<>|]", "_");
-        if (safeFileName.length() > 200) {
+        int safeFileNameLength = 200;
+        if (safeFileName.length() > safeFileNameLength) {
             safeFileName = safeFileName.substring(0, 200)
                     + "_"
                     + Integer.toHexString(key.hashCode());
@@ -86,7 +87,8 @@ public class FileSystemDao implements Dao<byte[]> {
         if (key == null || key.isBlank()) {
             throw new IllegalArgumentException("key cannot be null or blank");
         }
-        if (key.length() > 1024) {
+        int safeKeyLength = 1024;
+        if (key.length() > safeKeyLength) {
             throw new IllegalArgumentException("key too long (max 1024 chars)");
         }
     }

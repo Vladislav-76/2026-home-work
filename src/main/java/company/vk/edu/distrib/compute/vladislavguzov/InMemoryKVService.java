@@ -63,6 +63,7 @@ public class InMemoryKVService implements KVService {
                     break;
                 default:
                     http.sendResponseHeaders(405, 0);
+                    break;
             }
             http.close();
         }));
