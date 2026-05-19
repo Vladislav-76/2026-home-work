@@ -36,8 +36,8 @@ class AuditServiceImpl implements AuditService {
         props.put(ConsumerConfig.GROUP_ID_CONFIG, consumerGroupId);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
 
         consumer = new KafkaConsumer<>(props);
         consumer.subscribe(List.of(TOPIC));
@@ -51,8 +51,11 @@ class AuditServiceImpl implements AuditService {
         try {
             while (true) {
                 ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
-                for (ConsumerRecord<String, String> record : records) {
-                    events.add(parseEvent(record.value()));
+                if (!records.isEmpty()) {
+                    for (ConsumerRecord<String, String> record : records) {
+                        events.add(parseEvent(record.value()));
+                    }
+                    consumer.commitSync();
                 }
             }
         } catch (WakeupException e) {
@@ -69,6 +72,9 @@ class AuditServiceImpl implements AuditService {
 
     @Override
     public void stop() {
+        if (consumer == null) {
+            return;
+        }
         consumer.wakeup();
         try {
             pollThread.join();
